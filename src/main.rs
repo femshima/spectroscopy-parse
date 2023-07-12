@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fs::File};
+use std::{collections::HashMap, error::Error, fs::File, io::Write, path::PathBuf};
 
 use ole::{EntryType, Reader};
 
@@ -8,14 +8,21 @@ mod data_info;
 mod spectra;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let file = File::open("test-data")?;
+    let mut args = std::env::args();
+    args.next();
+    let path = if let Some(path) = args.next() {
+        PathBuf::from(path)
+    } else {
+        println!("Specify a path to the file to process");
+        std::process::exit(-1);
+    };
+
+    let file = File::open(&path)?;
     let parser = Reader::new(file).unwrap();
 
     let mut spectra_name: HashMap<u32, &str> = HashMap::new();
     let mut spectras: HashMap<u32, Spectra> = HashMap::new();
     for entry in parser.iterate() {
-        println!("{} {:?}", entry, entry.parent_node());
-
         match entry._type() {
             EntryType::RootStorage => {
                 spectra_name.insert(entry.id(), "[Root]");
@@ -53,8 +60,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    for row in rows {
-        println!("{}", row);
+    let mut output_path = path.clone();
+    output_path.set_extension("csv");
+    if output_path.exists() {
+        if let Some(s) = output_path.to_str() {
+            println!("The file {} already exists!", s);
+        } else {
+            println!("The file already exists!");
+        }
+        return Ok(());
     }
+
+    let mut output = File::create(output_path)?;
+    for row in rows {
+        writeln!(output, "{}", row)?;
+    }
+    output.flush()?;
+
     Ok(())
 }
