@@ -35,14 +35,26 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    for (id, spectra) in spectras {
+    let mut rows = vec![",".to_string()];
+    for (id, spectra) in &spectras {
         if spectra.y_data.len() > 0 {
-            dbg!(
-                spectra_name.get(&id).unwrap(),
-                &spectra.data_info,
-                &spectra.y_data.len()
-            );
+            rows[0].push_str(spectra_name.get(id).unwrap());
+            rows[0].push_str(",");
         }
+        for i in 0..spectra.data_info.point_count as usize {
+            if rows.len() < i + 2 {
+                rows.push(
+                    (spectra.data_info.start + spectra.data_info.step * (i as f64)).to_string(),
+                );
+                rows[i + 1].push_str(",");
+            }
+            rows[i + 1].push_str(spectra.y_data[i].to_string().as_str());
+            rows[i + 1].push_str(",");
+        }
+    }
+
+    for row in rows {
+        println!("{}", row);
     }
     Ok(())
 }
