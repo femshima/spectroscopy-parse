@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fs::File, io::Write, path::PathBuf};
+use std::{collections::HashMap, error::Error, fs::File, path::PathBuf};
 
 use ole::{EntryType, Reader};
 
@@ -6,6 +6,7 @@ use crate::spectra::Spectra;
 
 mod data_info;
 mod spectra;
+mod units;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args();
